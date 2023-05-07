@@ -24,7 +24,8 @@ class TicketCreateForm(forms.ModelForm):
 class TicketEditForm(forms.ModelForm):
     class Meta:
         model = Ticket
-        fields = ['warehouse', 'tag_to', ]
+        fields = ( 'tag_to', 'warehouse',)
+        # widgets = {'warehouse': forms.TextInput(attrs={'required': False})}
 
     
 

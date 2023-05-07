@@ -74,19 +74,25 @@ def ticket_detail_view(request, ticket_id):
     if request.method == 'POST':
         form = TicketEditForm(request.POST, request.FILES, instance=ticket)
         if form.is_valid():
-            print('OKKKK')
-            new_warehouse = form.save(commit=False)
-            new_warehouse.warehouse = form.cleaned_data['warehouse']
-            new_warehouse.tag_to = form.cleaned_data['tag_to']
-            new_warehouse.save()
+            form = form.save(commit=False)
+            print(form)
+            if form.has_changed() and 'warehouse' in form.changed_data:
+                form.warehouse = form.cleaned_data['warehouse']
+            else:
+              form.initial['warehouse']
+            if form.has_changed() and 'tag_to' in form.changed_data:
+                form.tag_to = form.cleaned_data['tag_to']
+            else:
+              form.initial['tag_to']    
+            form.save()
             messages.success(request, "WareHouse & Tag  Updated Successfuly")
             return redirect('ticket_detail', ticket_id=ticket.id)
     else:
-        form = TicketEditForm(instance=ticket)
+        form = TicketEditForm()
 
     #comment Data
     new_comment = None
-    # Comment posted
+    # Comment posted0
     if request.method == 'POST':
         comment_form = CommentForm(request.POST, request.FILES)
         if comment_form.is_valid():

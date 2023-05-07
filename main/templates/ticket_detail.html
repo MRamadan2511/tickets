@@ -20,7 +20,7 @@
       
         {% comment %} Warehous List Start {% endcomment %}
        <p>Warehous:</p>
-       {% if request.user.is_wh_manager or request.user.is_superuser or request.user.is_team_leader %}
+       {% if request.user.is_wh_manager or request.user.is_superuser  %}
             <select name="warehouse"  id="warehouse-select" class="form-select" >
               {% for ware in wh_list %}
               <option value="{{ ware.0 }}" {% if ticket.warehouse == ware.0 %}selected{% endif %}>

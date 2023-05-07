@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox{% endblock %}
+
+{% block content %}
+
+
+<style>
+    .card:hover {
+      transform: scale(1.05);
+      transition: all 0.3s ease-in-out;
+      border-width: 3px;
+      
+    }
+    .card-bg {
+        background-color: #f2f2f2; /* light gray */
+      }
+  </style>
+
+ 
+{% comment %} <div class="row">
+    <div class="col-lg-12">
+
+    <div class="page-header"><h1 class="mt-3 text-center" >All Tickets <i class="fa-sharp fa-solid fa-square-envelope"></i></h1></div>
+    <div class="table-responsive">
+    <table id="unassigned" class="mt-3 table table-striped " cellspacing="0" width="100%">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Owner</th>
+            <th>Status</th>
+            <th>Order ID</th>
+            <th>Description</th>
+            <th>Last Update</th>
+        </tr>
+        </thead>
+
+        <tbody>
+                {% for ticket in tickets %}
+            <tr>
+                <td><a class="text-decoration-none" href="{% url 'ticket_detail' ticket.id %}">{{ ticket.id }}</a></td>
+                <td>{{ ticket.owner }} </td>
+                <td>{{ ticket.status }}</td>
+                <td>{{ ticket.order_id }}</td>
+                <td>{{ ticket.description }}</td>
+                <td>{{ ticket.updated | timesince}}</td>
+            </tr>
+                {% endfor %}
+
+        </tbody>
+    </table>
+  </div>
+    </div>
+</div>  {% endcomment %}
+
+<div class="page-header"><h1 class="mt-3 text-center" >All Tickets <i class="fa-sharp fa-solid fa-square-envelope"></i></h1></div>
+
+<div class="row ">
+    {% for ticket in tickets %}
+
+    <div class="col-sm-6 p-2">
+      <div class="card ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="card-title">{{ ticket.order_id }}</h5>
+            </div>
+            {% comment %} <div>
+                <p class="text-center">Created by: {{ ticket.owner }}</p>
+              </div> {% endcomment %}
+              <div>
+                <p class="text-center"> Status: {{ ticket.status }}</p>
+              </div>
+              
+            <div>
+              <p class="text-right">Created At: {{ ticket.updated | timesince}}</p>
+            </div>
+          </div>
+          <p class="card-text text-truncate">{{ ticket.description }}</p>
+          <a class="btn btn-primary text-decoration-none" href="{% url 'ticket_detail' ticket.id %}">Replay</a>
+          <a href="#" class="btn btn-secondary">Reassign</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+</div>
+  
+  
+
+{% endblock %}

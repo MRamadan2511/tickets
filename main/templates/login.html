@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+        <!-- Bootstrap Modal -->
+        <div class="modal fade" id="LoginModal" tabindex="-1" role="dialog" aria-labelledby="LoginModalLabel" aria-hidden="true">
+            <div class="modal-dialog" style="width: 450px;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Please sign in</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form class="form-signin" role="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
+                            {% csrf_token %}
+                            <!-- <h2 class="form-signin-heading">Please sign in</h2> -->
+                            <label for="login-username" class="sr-only">User nameeeeeeeeeeeeee</label>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="User name" required autofocus>
+                            <label for="login-password" class="sr-only">Password</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+
+                            <button class="btn btn-lg btn-primary btn-block" value="login" type="submit">Sign in</button>
+                            <input type="hidden" name="next" value="{{ next }}" />
+                        </form>
+
+                    </div>
+                    <div class="modal-footer" style="text-align: left;">
+                        Forgot your password? Shit happens.
+                    </div>
+                </div>
+            </div>
+        </div>

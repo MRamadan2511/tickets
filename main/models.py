@@ -79,6 +79,20 @@ class UserProfile(models.Model):
           return "%s" % self.user 
 
 
+
+class TicketManager(models.Manager):
+    def get_queryset(self, user=None):
+        if user is None:
+            return super().get_queryset()
+        if user.is_superuser:
+            return super().get_queryset()
+        elif user.is_courier:
+            return super().get_queryset().filter(owner=user)
+        elif user.is_wh_manager or user.is_team_leader:
+            return super().get_queryset().filter(owner=user) | super().get_queryset().filter(warehouse=user.wh)
+        else:
+            return super().get_queryset().filter(customer=user)
+
 class Ticket(models.Model):
     STATUS_CHOICES = (
         ('OPEN', 'OPEN'),
@@ -102,6 +116,14 @@ class Ticket(models.Model):
         ('Security', 'Security'),
     )
 
+    TAGS = (
+        ('Car Issue', 'Car Issue'),
+        ('Discount Issue', 'Discount Issue'),
+        ('Delay OR Failed', 'Delay OR Failed'),
+        ('Partial Deliverey', 'Partial Deliverey'),
+        ('Arrive Orders', 'Arrive Orders'),
+    )
+
     order_id = models.IntegerField('Order ID',)
 
     owner = models.ForeignKey(NewUser,related_name='owner', blank=True,null=True,
@@ -110,7 +132,7 @@ class Ticket(models.Model):
     description = models.TextField('Description', blank=True, null=True)
     status = models.CharField('Status',choices=STATUS_CHOICES,max_length=255,
                               blank=True, null=True, default="OPEN")
-    warehouse = models.CharField('Warehouse',choices=WAREHOUSE_CHOICES,max_length=255,)
+    warehouse = models.CharField('Warehouse',choices=WAREHOUSE_CHOICES,max_length=255,blank=True,null=True,)
     post_image= models.ImageField(upload_to='image/post' ,blank=True, null=True,)
     closed_date = models.DateTimeField(blank=True, null=True)
     assigned_to = models.ForeignKey(NewUser,
@@ -118,7 +140,23 @@ class Ticket(models.Model):
                                     verbose_name='Assigned to', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    tag = models.CharField('Tag',choices=TAGS,max_length=255,
+                              blank=True, null=True, default="None")
+    
+    wh_editable = models.BooleanField(default=False)
 
+    objects = TicketManager()
+
+
+    def is_accessible_by_courier(self, user):
+        return user.has_perm('user.is_courier') and self.owner == user
+
+
+    def can_edit_warehouse(self, user):
+        return  user.is_wh_manager or user.is_superuser
+    
+    def can_edit_tag_to(self, user):
+        return user.is_team_leader or user.is_wh_manager or user.is_superuser
 
     class Meta:
         ordering = ['-updated', ]
@@ -127,10 +165,10 @@ class Ticket(models.Model):
         return "%s" % (self.order_id)
 
 
+
+
+
 class Comment(models.Model):
-    """
-    comment to a ticket.
-    """
     ticket = models.ForeignKey(Ticket, verbose_name='Ticket', on_delete=models.CASCADE)
     comment = models.TextField(blank=True, null=True,)
     user = models.ForeignKey(NewUser, blank=True, null=True, verbose_name='User', on_delete=models.CASCADE)

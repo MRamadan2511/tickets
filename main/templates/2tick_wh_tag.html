@@ -1,0 +1,54 @@
+<form action="{% url "update_wh_tag"  ticket_id=ticket.id%}" method="POST" id="my-form"  >
+  {% csrf_token %}
+
+  {% comment %} Warehous List Start {% endcomment %}
+   <p>Warehous:</p>
+   {% if request.user.is_wh_manager or request.user.is_superuser or request.user.is_team_leader %}
+        <select name="warehouse"  id="warehouse-select" class="form-select" >
+          {% for ware in wh_list %}
+          <option value="{{ ware.0 }}" {% if ticket.warehouse == ware.0 %}selected{% endif %}>
+            {{ ware.1 }}
+          </option>
+          {% endfor %}
+
+        </select>
+   {% else %}
+   <p class="mt-2">{{ ticket.warehouse }}</p>
+   {% endif %}
+   <hr style="height:5px; border:1px;  background-color:Silver"> 
+{% comment %} Warehous List End {% endcomment %}
+
+
+{% comment %} Team Tag Start {% endcomment %}
+      <p class="mt-2">Tag To:</p>
+
+      {% if request.user.is_superuser or request.user.is_team_leader or request.user.is_wh_manager%}
+        <select name="tag_to"  id="tag-select" class="form-select" >
+          {% for tag in team_tag_list %} 
+          <option value="{{ tag.0 }}" {% if ticket.tag_to == tag.0 %}selected{% endif %}>
+            {{ tag.1 }}
+          </option>
+          {% endfor %}
+
+        </select>
+      {% else %}
+      <p class="mt-2">{{ ticket.tag_to  }}</p>
+      {% endif %}
+
+
+    <div>
+        <button type="submit" class="mt-3 mx-auto btn btn-primary btn-md save-btn d-none">Save Edits</button>
+        
+    </div>
+
+</form>
+
+
+<script>
+  $(document).ready(function() {
+    $('#warehouse-select, #tag-select').change(function() {
+      $('.save-btn').removeClass('d-none'); // show the submit button
+      });
+    });
+  
+</script> 

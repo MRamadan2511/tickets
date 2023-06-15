@@ -1,4 +1,7 @@
 from django.contrib import admin
+from hijack.contrib.admin import HijackUserAdminMixin
+
+
 from .models import Ticket, Comment, UserProfile, NewUser
 
 from django.contrib.auth.admin import UserAdmin
@@ -11,7 +14,7 @@ class UserAdminConfig(UserAdmin):
     list_filter = ('user',)
     ordering = ('user',)
     list_display = ('user',
-                    'is_active', 'is_staff')
+                    'is_active', 'is_staff',)
     fieldsets = (
         (None, {'fields': ( 'user','wh',)}),
         ('Permissions', {'fields': ( 'is_superuser','is_staff', 'is_active', 

@@ -1,59 +1,73 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load my_filters %}
 
 {% block title %}Inbox{% endblock %}
 
 {% block content %}
 
+<form method="get" action="{% url 'inbox' %}" class="form-inline p-4 text-end ">
+  <div class="form-group ">
+    {{ filter_form.status }}
+    {{ filter_form.tag_to }}
+    <button type="submit" class="btn btn-sm btn-success">Filter</button>
+  </div>  
+</form>
 
-<style>
-    .card:hover {
-      transform: scale(1.05);
-      transition: all 0.3s ease-in-out;
-      border-width: 3px;
-      
-    }
-    .card-bg {
-        background-color: #f2f2f2; /* light gray */
-      }
-  </style>
 
- 
-{% comment %} <div class="row">
-    <div class="col-lg-12">
 
-    <div class="page-header"><h1 class="mt-3 text-center" >All Tickets <i class="fa-sharp fa-solid fa-square-envelope"></i></h1></div>
-    <div class="table-responsive">
-    <table id="unassigned" class="mt-3 table table-striped " cellspacing="0" width="100%">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Owner</th>
-            <th>Status</th>
-            <th>Order ID</th>
-            <th>Description</th>
-            <th>Last Update</th>
-        </tr>
-        </thead>
+<p class="text-end fw-bold">Total tickets Found: {{ ticket_count }}</p>
+<p>open {{open_count}}</p>
+<p>Last_Mile {{tag_to_count}}</p>
 
-        <tbody>
-                {% for ticket in tickets %}
-            <tr>
-                <td><a class="text-decoration-none" href="{% url 'ticket_detail' ticket.id %}">{{ ticket.id }}</a></td>
-                <td>{{ ticket.owner }} </td>
-                <td>{{ ticket.status }}</td>
-                <td>{{ ticket.order_id }}</td>
-                <td>{{ ticket.description }}</td>
-                <td>{{ ticket.updated | timesince}}</td>
-            </tr>
-                {% endfor %}
 
-        </tbody>
-    </table>
-  </div>
-    </div>
-</div>  {% endcomment %}
 
 <div class="page-header"><h1 class="mt-3 text-center" >All Tickets <i class="fa-sharp fa-solid fa-square-envelope"></i></h1></div>
+
+
+<table class="table table-striped">
+  <thead>
+    <tr class ="text-center">
+      <th>Order ID</th>
+      <th>Created By</th>
+      <th>Tag To</th>
+    
+      <th>Status</th>
+      <th>Warehouse</th>
+ 
+
+      <th>Assigned To</th>
+
+      <th>Updated</th>
+      <th>Tag</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ticket in tickets %}
+
+    <tr class ="text-center">
+      
+        <td><a class=" text-decoration-none" href="{% url 'ticket_detail' ticket.id %}">{{ ticket.order_id }} </a></td>
+        <td>{{ ticket.owner }}</td>
+        <td>{{ ticket.tag_to }}</td>
+      
+        <td><span class="badge {{ ticket.status|status_class }} ">{{ ticket.status }}</span></td>
+        <td>{{ ticket.warehouse }}</td>     
+        <td>{{ ticket.assigned_to }}</td>
+        <td>{{ ticket.updated }}</td>
+        <td>{{ ticket.tag }}</td>
+      </a>
+      </tr>
+        {% empty %}
+        <p> There is no tickets in this view </p>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+
+
+{% comment %} 
 
 <div class="row ">
     {% for ticket in tickets %}
@@ -65,9 +79,9 @@
             <div>
               <h5 class="card-title">{{ ticket.order_id }}</h5>
             </div>
-            {% comment %} <div>
+            <div>
                 <p class="text-center">Created by: {{ ticket.owner }}</p>
-              </div> {% endcomment %}
+              </div>
               <div>
                 <p class="text-center"> Status: {{ ticket.status }}</p>
               </div>
@@ -84,7 +98,7 @@
     </div>
     {% endfor %}
 </div>
-  
+   {% endcomment %}
   
 
 {% endblock %}

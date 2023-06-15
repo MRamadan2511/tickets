@@ -41,10 +41,13 @@ INSTALLED_APPS = [
 
 
     "debug_toolbar",
+    # 'bootstrap5',
 
     #My Apps
     "phonenumber_field",
     'crispy_forms',
+    'hijack',
+    'hijack.contrib.admin',
     'crispy_bootstrap5',
     'main',
 
@@ -60,6 +63,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'hijack.middleware.HijackUserMiddleware',
 ]
 
 ROOT_URLCONF = 'tickets.urls'
@@ -131,7 +135,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static',]
+
+STATIC_ROOT = BASE_DIR / 'static_root/'
+
 
 
 MEDIA_ROOT = BASE_DIR / "media"

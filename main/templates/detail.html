@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<style>
+    .info::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 1px;  
+        height: 100%;
+        background: black;
+  }
+</style>
+<div class="row">
+    <div class="col-lg-10 border-right p-3 info">
+        <h1 class="text-center">{{ ticket.order_id }}</h1>
+        <hr style="height:2px; border: 1px;  background-color:Silver">
+        <p>Description: {{ ticket.description }}</p>
+    </div>
+
+    <div class="col-lg-2 border-right p-3 ">
+        <p>Created By:  {{ ticket.owner }}</p>
+        <p>Tag To: {{ ticket.tag_to }}</p>
+        <p>Status: {{ ticket.status }}</p>
+        {% if ticket.can_edit_warehouse %}
+            {% include 'main/ticket_update_warehouse_form.html' %}
+        {% else %}
+            <p>Warehouse: {{ ticket.warehouse }}</p>
+        {% endif %}
+    </div>
+</div>
+
+
+{% if ticket.post_image %}
+<a href="{{ticket.post_image.url}}" target="_blank"><p>Attched File</p></a>
+{% endif %}
+<hr style="height:5px; border: 1px;  background-color:Silver">
+<h2 class="text-center">Comments</h2>
+
+<div class="card-body">
+    <div class="comments" style="padding: 10px;">
+      {% for comment in comments %}
+      {% comment %}  style="background-color:{% cycle 'White' 'Silver' as bgcolor %}" {% endcomment %}
+      <div class="text-end">
+        <span class="text-end text-muted font-weight-normal">
+            {% if comment.user == user %}
+              You Added Comment @  <small > {{ comment.created }}</small>
+            {% else %}
+              {{ comment.user }}  Added Comment  @  <small > {{ comment.created }}</small>
+        </span>
+            {% endif %}
+        <p class="text-end pt-3">
+          {{ comment.comment }}
+        </p>
+        {% if comment.comment_image%}
+        <a   href="{{comment.comment_image.url}}" target="_blank"> <p class="text-end ">Attched File</p></a>
+        {% endif %}
+        <hr style="height:5px; border: 1px;  background-color:Silver">
+        
+      </div>
+  
+      {% endfor %}
+    </div>
+
+
+
+
+
+<h2>Comments</h2>
+{% for comment in comments %}
+<p>{{ comment.comment }}</p>
+<p>By: {{ comment.user }}</p>
+    {% if comment.comment_image %}
+        <img src="{{ comment.comment_image.url }}" alt="Comment Image">
+    {% endif %}
+{% endfor %}
+
+<h2>Add Comment</h2>
+    <form method="POST" enctype="multipart/form-data">
+        
+        {% csrf_token %}
+        {{ form | crispy }}
+            
+        <button type="submit" class="btn btn-primary  btn-sm">Submit</button>
+    </form>
+
+
+{% include 'main/ticket_update_warehouse_form.html' %}
+{% include 'main/ticket_update_tag_form.html' %}
+
+{% endblock %}

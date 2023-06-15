@@ -1,0 +1,8 @@
+{% load crispy_forms_tags %}
+
+<h2>Update Tag</h2>
+<form method="post" action="{% url 'ticket_update_tag' ticket.pk %}">
+    {% csrf_token %}
+    {{ tag_form | crispy}}
+    <button type="submit">Update Tag</button>
+</form>

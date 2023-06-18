@@ -1,9 +1,12 @@
 from django.db import models
-
-from django.db import models
+from django.dispatch import receiver
 from django.contrib.auth.models import User, AbstractBaseUser, PermissionsMixin,BaseUserManager
-from datetime import datetime as timezone
-from django.contrib.auth.models import UserManager
+from datetime import datetime as tz
+from django.utils import timezone
+import pytz
+
+# from django.utils.deconstruct import deconstructible
+
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -91,14 +94,15 @@ class TicketManager(models.Manager):
         elif user.is_wh_manager or user.is_team_leader:
             return super().get_queryset().filter(owner=user) | super().get_queryset().filter(warehouse=user.wh)
         else:
-            return super().get_queryset().filter(customer=user)
-
+            return super().get_queryset().filter(owner=user)
+        
 class Ticket(models.Model):
     STATUS_CHOICES = (
         ('OPEN', 'OPEN'),
         ('IN PROGRESS', 'IN PROGRESS'),
         ('WAITING', 'WAITING'),
-        ('DONE', 'DONE'),
+        ('CLOSED', 'CLOSED'),
+        ('OVERDUE', 'OVERDUE'),
     )
     WAREHOUSE_CHOICES = (
         ('Mostorod', 'Mostorod'),
@@ -148,6 +152,26 @@ class Ticket(models.Model):
     objects = TicketManager()
 
 
+    def save(self, *args, **kwargs):
+        # check if the tag_to or assigned_to fields have changed
+        if self.pk:
+            original_ticket = Ticket.objects.get(pk=self.pk)
+            if self.tag_to != original_ticket.tag_to or self.assigned_to != original_ticket.assigned_to:
+                # update the status to "WAITING"
+                self.status = "WAITING"
+                # add a log entry
+                admin_user = NewUser.objects.get(user='Admin')
+                print("Change ticket status to waiting")
+                self.log_update(user=admin_user,
+                                 message=f"The ticket status was changed to WAITING because the {'' if self.tag_to == original_ticket.tag_to else 'tag_to '}{'and ' if self.tag_to != original_ticket.tag_to and self.assigned_to != original_ticket.assigned_to else ''}{'' if self.assigned_to == original_ticket.assigned_to else 'assigned_to '}fields were updated.")
+            
+        super().save(*args, **kwargs)
+
+
+    def log_update(self, user, message):
+        TicketLog.objects.create(ticket=self, user=user, message=message)
+
+
     def is_accessible_by_courier(self, user):
         return user.has_perm('user.is_courier') and self.owner == user
 
@@ -157,12 +181,66 @@ class Ticket(models.Model):
     
     def can_edit_tag_to(self, user):
         return user.is_team_leader or user.is_wh_manager or user.is_superuser
+    
 
     class Meta:
         ordering = ['-updated', ]
 
     def __str__(self):
-        return "%s" % (self.order_id)
+        return f"{self.order_id}"
+
+#Uodate Tixket Status to over due if not closed after 15 mint with no edits
+# @receiver(models.signals.pre_save, sender=Ticket)
+# def check_overdue_status(sender, instance, **kwargs):
+#     print('pre_save signal triggered') # add this line to print the signal
+#     if instance.status not in ['CLOSED', 'OVERDUE'] and instance.closed_date is None:
+#         fifteen_minutes_ago = timezone.now() - timezone.timedelta(minutes=1)
+#         local_tz = pytz.timezone('Africa/Cairo') # replace with your local timezone
+#         fifteen_minutes_ago_local = fifteen_minutes_ago.astimezone(local_tz)
+#         if instance.updated is not None and instance.updated <= fifteen_minutes_ago_local:
+#             instance.status = 'OVERDUE'
+#         if instance.id is None:
+#             instance.updated = timezone.now()
+#         print(instance.updated) # add this line to print the updated field
+
+
+# @receiver(models.signals.pre_save, sender=Ticket)
+# def check_overdue_status(sender, instance, **kwargs):
+#     print('pre_save signal triggered') # add this line to print the signal
+#     if instance.status not in ['CLOSED', 'OVERDUE'] and instance.closed_date is None:
+#         one_minute_ago = timezone.now() - timezone.timedelta(minutes=1)
+#         if instance.updated is not None and instance.updated <= one_minute_ago:
+#             instance.status = 'OVERDUE'
+#             print(instance.status)
+#         if instance.id is None:
+#             instance.updated = timezone.now()
+#             print(instance.updated)
+#             print(instance.status)
+
+
+# @receiver(models.signals.pre_save, sender=Ticket)
+# def check_overdue_status(sender, instance, **kwargs):
+#     if instance.status not in ['CLOSED', 'OVERDUE'] and instance.closed_date is None:
+#         fifteen_minutes_ago = timezone.now() - timezone.timedelta(minutes=1)
+#         if instance.id is None or (instance.updated is not None and instance.updated <= fifteen_minutes_ago):
+#             instance.status = 'OVERDUE'
+#             print(f"Ticket ({instance.id}) Update to OverDue ")
+#         if instance.id is None:
+#             instance.updated = timezone.now()
+#             admin_user = NewUser.objects.get(user='Admin')
+#             instance.log_update(user=admin_user,
+#                                  message=f"The ticket status was changed to OverDue" )
+        
+
+
+class TicketLog(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    user = models.ForeignKey(NewUser, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    message = models.TextField()
+
+    def __str__(self):
+        return f"{self.ticket} - {self.user} - {self.message} -> {self.timestamp}"
 
 
 
@@ -175,6 +253,15 @@ class Comment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     comment_image= models.ImageField(upload_to='image/comment' ,blank=True, null=True,)
+
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # If this is a new comment, update the assigned user of the ticket
+            if not self.ticket.assigned_to and not self.user.is_courier:
+                self.ticket.assigned_to = self.user
+                self.ticket.save()
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['modified', ]

@@ -41,6 +41,8 @@ INSTALLED_APPS = [
 
 
     "debug_toolbar",
+    'background_task',
+    # 'django_cron',
     # 'bootstrap5',
 
     #My Apps
@@ -122,13 +124,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'EET'
+TIME_ZONE = 'Africa/Cairo'
 
-USE_I18N = True
+# USE_I18N = True
 
-USE_L10N = True
+# USE_L10N = True
 
-USE_TZ = True
+# USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -158,8 +160,26 @@ LOGIN_REDIRECT_URL = "inbox"
 LOGOUT_REDIRECT_URL = 'home'
 
 
+# RUN_BACKGROUND_TASKS = True
+
 # INTERNAL_IPS = [
 #     # ...
 #     "127.0.0.1",
+
 #     # ...
 # ]
+# from datetime import datetime, timedelta
+
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TASK_ALWAYS_EAGER = True
+
+
+# Celery configuration
+# CELERY_TIMEZONE = 'UTC'
+# CELERY_ENABLE_UTC = True
+
+# Periodic tasks

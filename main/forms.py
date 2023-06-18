@@ -99,7 +99,7 @@ class TicketFilterForm(forms.Form):
         ('OPEN', 'OPEN'),
         ('IN PROGRESS', 'IN PROGRESS'),
         ('WAITING', 'WAITING'),
-        ('DONE', 'DONE'),
+        ('CLOSED', 'CLOSED'),
     )
     TEAM_CHOICES = (
         ('', 'All'),

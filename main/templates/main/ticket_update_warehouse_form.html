@@ -1,10 +1,10 @@
 {% comment %} {% if warehouse_form %} {% endcomment %}
 {% load crispy_forms_tags %}
 
-<h2>Update Warehouse</h2>
+
 <form method="post" action="{% url 'ticket_update_warehouse' ticket.pk %}">
     {% csrf_token %}
     {{ warehouse_form | crispy}}
-    <button type="submit">Update Warehouse</button>
+    <button type="submit" class="btn btn-success btn-sm" >Update Warehouse</button>
 </form>
 

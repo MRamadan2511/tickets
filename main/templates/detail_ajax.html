@@ -1,0 +1,6 @@
+{% if viewers %}
+    <p>Currently viewing: {% for viewer in viewers %}
+        <span class="viewer">{{ viewer.user }}</span> 
+        {% endfor %}
+    </p>
+{% endif %}

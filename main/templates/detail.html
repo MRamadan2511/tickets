@@ -2,92 +2,120 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
+
 <style>
-    .info::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: 1px;  
-        height: 100%;
-        background: black;
-  }
+    .border-right {
+        border-right: 4px solid Silver;
+        
+    }
+  
 </style>
 <div class="row">
-    <div class="col-lg-10 border-right p-3 info">
-        <h1 class="text-center">{{ ticket.order_id }}</h1>
+    <div class="col-lg-10 border-right p-3">
+        <h1 class="text-center ">{{ ticket.order_id }}</h1>
         <hr style="height:2px; border: 1px;  background-color:Silver">
         <p>Description: {{ ticket.description }}</p>
-    </div>
 
-    <div class="col-lg-2 border-right p-3 ">
-        <p>Created By:  {{ ticket.owner }}</p>
-        <p>Tag To: {{ ticket.tag_to }}</p>
-        <p>Status: {{ ticket.status }}</p>
-        {% if ticket.can_edit_warehouse %}
-            {% include 'main/ticket_update_warehouse_form.html' %}
-        {% else %}
-            <p>Warehouse: {{ ticket.warehouse }}</p>
+        {% if ticket.post_image %}
+            <a class="p-3" href="{{ticket.post_image.url}}" target="_blank"><p>Attched File</p></a>
         {% endif %}
+        <hr style="height:5px; border: 1px;  background-color:Silver">
+        {% comment %} <h2 class="text-center">Comments</h2> {% endcomment %}
+
+        <div >
+            <div class="comments" >
+            {% for comment in comments %}
+                <div class="text-end">
+                    <span class="text-end  font-weight-normal">
+                        {% if comment.user == user %}
+                        You Added Comment @  <small class="text-muted"> {{ comment.created }}</small>
+                        {% else %}
+                        {{ comment.user }}  Added Comment  @  <small class="text-muted"> {{ comment.created }}</small>
+                        {% endif %}
+                    </span>
+                    
+
+                    <p class="text-end pt-3">
+                        {{ comment.comment }}
+                    </p>
+                    {% if comment.comment_image%}
+                        <a   href="{{comment.comment_image.url}}" target="_blank"> <p class="text-end ">Attched File</p></a>
+                    {% endif %}
+                        <hr style="height:5px; border: 1px;  background-color:Silver">
+                
+                </div>
+        
+            {% endfor %}
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+        
+            {% csrf_token %}
+            {{ form | crispy }}
+                
+            <button type="submit" class="btn btn-primary  btn-sm">Add Comment</button>
+        </form> 
     </div>
 </div>
 
 
-{% if ticket.post_image %}
-<a href="{{ticket.post_image.url}}" target="_blank"><p>Attched File</p></a>
-{% endif %}
-<hr style="height:5px; border: 1px;  background-color:Silver">
-<h2 class="text-center">Comments</h2>
+    {% if request.user.is_courier %}
+        
+    {% else %}
+    <div class="col-lg-2 p-3 ">
+        <div id="viewers-container">
+            {% include "detail_ajax.html" %}
+          </div>
 
-<div class="card-body">
-    <div class="comments" style="padding: 10px;">
-      {% for comment in comments %}
-      {% comment %}  style="background-color:{% cycle 'White' 'Silver' as bgcolor %}" {% endcomment %}
-      <div class="text-end">
-        <span class="text-end text-muted font-weight-normal">
-            {% if comment.user == user %}
-              You Added Comment @  <small > {{ comment.created }}</small>
-            {% else %}
-              {{ comment.user }}  Added Comment  @  <small > {{ comment.created }}</small>
-        </span>
-            {% endif %}
-        <p class="text-end pt-3">
-          {{ comment.comment }}
-        </p>
-        {% if comment.comment_image%}
-        <a   href="{{comment.comment_image.url}}" target="_blank"> <p class="text-end ">Attched File</p></a>
+        {% comment %} {% if viewers %}
+            {% for v in viewers %}
+            <p>Currently viewing: {{ v.user }}</p>
+            {% endfor %}
+        {% endif %} {% endcomment %}
+        <p>Created by:  {{ ticket.owner }}</p>
+        <p>Status: {{ ticket.status }}</p>
+        <p>Assigned To: {{ ticket.assigned_to }}</p>
+        {% if request.user.is_superuser or request.user.is_wh_manager or request.user.is_manager%}
+            {% include 'main/ticket_update_warehouse_form.html'%}
+        {% else %}
+            <p>Warehouse: {{ ticket.warehouse }}</p>
+        {% endif %}
+        
+        {% if request.user.is_superuser or request.user.is_wh_manager or request.user.is_manager or request.user.is_team_leader%}
+            <hr style="height:5px; border: 1px;  background-color:Silver">
+            {% include 'main/ticket_update_tag_form.html' %}
+        {% else %}
+        <p>Tag To: {{ ticket.tag_to }}</p>
         {% endif %}
         <hr style="height:5px; border: 1px;  background-color:Silver">
-        
-      </div>
-  
-      {% endfor %}
+        <p> Histroy Comming Soon.... </p>
     </div>
-
-
-
-
-
-<h2>Comments</h2>
-{% for comment in comments %}
-<p>{{ comment.comment }}</p>
-<p>By: {{ comment.user }}</p>
-    {% if comment.comment_image %}
-        <img src="{{ comment.comment_image.url }}" alt="Comment Image">
     {% endif %}
-{% endfor %}
-
-<h2>Add Comment</h2>
-    <form method="POST" enctype="multipart/form-data">
-        
-        {% csrf_token %}
-        {{ form | crispy }}
-            
-        <button type="submit" class="btn btn-primary  btn-sm">Submit</button>
-    </form>
+</div>
 
 
-{% include 'main/ticket_update_warehouse_form.html' %}
-{% include 'main/ticket_update_tag_form.html' %}
+{% comment %} Code for updateing viewlist {% endcomment %}
+{% comment %} <script>  
 
+    function updateViewers() {
+        jQuery.ajax({
+            url: '/api/ticket_viewers/{{ ticket.pk }}/',
+            dataType: "json",
+            type: 'GET'
+        }).done(function(data) {
+            jQuery('.viewer').remove(); // remove the existing viewers
+            jQuery.each(data, function(index, viewer) {
+                var viewerSpan = jQuery('<span>').addClass('viewer').text(viewer.user);
+                if (index < data.length - 1) {
+                    viewerSpan.append(', ');
+                }
+                jQuery('#viewers-container p').append(viewerSpan);
+            });
+        }).fail(function() {
+            console.log('Error updating viewers');
+        });
+    }
+    
+    // call the function every 5 seconds
+    setInterval(updateViewers, 5000);
+</script> {% endcomment %}
 {% endblock %}

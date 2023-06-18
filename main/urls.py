@@ -30,5 +30,6 @@ urlpatterns = [
     path('ticket/<int:pk>/comment/', TicketCommentView.as_view(), name='ticket_comment'),
     path('ticket/<int:pk>/update_warehouse/', TicketUpdateWarehouseView.as_view(), name='ticket_update_warehouse'),
     path('ticket/<int:pk>/update_tag/', TicketUpdateTagToView.as_view(), name='ticket_update_tag'),
+    path('api/ticket_viewers/<int:pk>/', TicketDetailView.as_view(), name='ticket_viewers'),
 ]
  

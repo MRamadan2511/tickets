@@ -1,4 +1,6 @@
 from django.shortcuts import render,redirect, get_object_or_404
+from django.http import JsonResponse
+
 
 from django.db.models import Count, Q,Sum
 from django.contrib.auth.decorators import user_passes_test, login_required
@@ -23,9 +25,20 @@ from django.views.generic import DetailView, ListView
 from django.urls import reverse_lazy
 
 
+from background_task import background
+from django.utils import timezone
+from .tasks import update_overdue_tickets
+
+
+@background(schedule=timezone.timedelta(minutes=1))
+def schedule_update_overdue_tickets():
+    print("OOOK")
+    return update_overdue_tickets()
+
 
 def home(request):
     test = 5*5
+    schedule_update_overdue_tickets(repeat=timezone.timedelta(minutes=1).total_seconds())
     return render(request, 'base.html', context={'test':test})
 
 
@@ -117,24 +130,47 @@ class TicketListView(ListView):
     
         context['ticket_count'] = len(df)
         context['open_count'] = len(df[df['status']=='OPEN']) 
-        context['closed_count'] = len(df[df['status']=='closed'])
+        context['closed_count'] = len(df[df['status']=='CLOSED'])
+        context['inprogress_count'] = len(df[df['status']=='IN PROGRESS'])
+        context['waiting_count'] = len(df[df['status']=='WAITING']) 
         context['tag_to_count'] = len(df[df['tag_to']=='Last Mile']) 
+        context['overdue_count'] = len(df[df['status']=='OVERDUE']) 
 
-
-
-  
         return context
-
+    
 class TicketDetailView(LoginRequiredMixin, DetailView):
     model = Ticket
     template_name = 'detail.html'
     context_object_name = 'ticket'
 
-    
+    def dispatch(self, request, *args, **kwargs):
+        # Retrieve the current list of viewer IDs from the session
+        viewer_ids = request.session.get('ticket_viewers', [])
+
+        # Add the current user's ID to the list of viewers
+        if self.request.user.pk not in viewer_ids:
+            viewer_ids.append(self.request.user.pk)
+
+        # Store the updated list of viewer IDs in the session
+        request.session['ticket_viewers'] = viewer_ids
+        request.session.save()
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         user = self.request.user
         return Ticket.objects.get_queryset(user)
 
+    def get_viewers(self):
+        # Retrieve the list of viewer IDs from the session
+        viewer_ids = self.request.session.get('ticket_viewers', [])
+        print(viewer_ids)
+
+        if viewer_ids:
+            # Return a list of user objects for the viewer IDs
+            return NewUser.objects.filter(pk__in=viewer_ids)
+
+        return None
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -148,13 +184,21 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
         if self.object.can_edit_warehouse(user):
             warehouse_form = WarehouseForm(initial={'warehouse': self.object.warehouse})
             context['warehouse_form'] = warehouse_form
+            context['user'] = user
 
         if self.object.can_edit_tag_to(user):
             tag_form = TicketTagForm(initial={'tag_to': self.object.tag_to})
             context['tag_form'] = tag_form
 
+        # Query users associated with the same ticket as the current ticket
+        other_users = NewUser.objects.filter().exclude(id=user.id).distinct()
+        context['other_users'] = other_users
+
+        # Include the current viewer's information in the context
+        context['viewers'] = self.get_viewers()
+
         return context
-    
+
     def post(self, request, *args, **kwargs):
         ticket = self.get_object()
         form = CommentForm(request.POST, request.FILES)
@@ -163,7 +207,29 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
             comment.ticket = ticket
             comment.user = self.request.user
             comment.save()
+            ticket.log_update(user=request.user, message=f"Added new comment by {comment.user}")
+            messages.success(self.request, "Comment added")
         return redirect('ticket_detail', pk=ticket.pk)
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        response['Access-Control-Allow-Origin'] = '*'
+        return response
+
+    def get(self, request, *args, **kwargs):
+        if 'viewers' in self.request.path:
+            ticket = self.get_object()
+            viewers = self.get_viewers().values('user')
+            return JsonResponse(list(viewers), safe=False)
+
+        return super().get(request, *args, **kwargs)
+
+    def get_template_names(self):
+        if self.request.is_ajax():
+            return ['detail_ajax.html']
+        else:
+            return ['detail.html']
+
     
 class TicketCommentView(FormView):
     template_name = 'ticket_comment.html'
@@ -176,9 +242,11 @@ class TicketCommentView(FormView):
         # Create a new Comment object from the form data
         comment = form.save(commit=False)
         comment.user = self.request.user
-        print(comment.user)
         comment.ticket = ticket
+        messages.success(self.request, "Comment added")
         comment.save()
+        
+        ticket.log_update(user=self.request.user, message=f"Added new comment by {comment.user}")
 
         return redirect('ticket_detail', pk=ticket.pk)
 
@@ -201,10 +269,12 @@ class TicketUpdateWarehouseView(UpdateView):
         ticket = form.save(commit=False)
         ticket.wh_editable = False
         ticket.save()
+        ticket.log_update(user=self.request.user, message=f"Warehouse update by {self.request.user}")
         return super().form_valid(form)
     
     def get_success_url(self):
-        return reverse_lazy('ticket_detail', kwargs={'pk': self.object.pk})
+        messages.success(self.request, "WareHouse Updated Successfuly")
+        return reverse_lazy('inbox')
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
@@ -233,14 +303,16 @@ class TicketUpdateTagToView(UpdateView):
         return kwargs
 
     def get_success_url(self):
+        messages.success(self.request, "Tag To Updated Successfuly")
         return reverse_lazy('ticket_detail', kwargs={'pk': self.object.pk})
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         user = self.request.user
         if obj.can_edit_tag_to(user):
-            # obj.wh_editable = True
             obj.save()
+            obj.log_update(user=self.request.user, message=f"Tag To update by {self.request.user}")
+
             return obj
         else:
             raise Http404("You don't have permission to access this page.")

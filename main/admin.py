@@ -2,7 +2,7 @@ from django.contrib import admin
 from hijack.contrib.admin import HijackUserAdminMixin
 
 
-from .models import Ticket, Comment, UserProfile, NewUser
+from .models import Ticket, Comment, UserProfile, NewUser,TicketLog
 
 from django.contrib.auth.admin import UserAdmin
 # Register your models here.
@@ -33,6 +33,7 @@ class UserAdminConfig(UserAdmin):
 
 
 admin.site.register(NewUser, UserAdminConfig)
+admin.site.register(TicketLog)
 
 
 

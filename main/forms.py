@@ -13,6 +13,21 @@ class UserSettingsForm(forms.ModelForm):
 
 
 class TicketCreateForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # get the user from the kwargs
+        super().__init__(*args, **kwargs)
+        if user:
+            # define the custom field labels for the user
+            if user.is_courier:
+                self.fields['order_id'].label = 'رقم الاوردر'
+                self.fields['description'].label = 'التفاصيل'
+
+            else:
+                self.fields['order_id'].label = 'Order ID'
+                self.fields['description'].label = 'Description'
+
+
     class Meta:
         model = Ticket
         fields = ('order_id', 'description', 'post_image' ,)
@@ -32,26 +47,6 @@ class TicketEditForm(forms.ModelForm):
     #         # self.fields['warehouse'].disabled = True
     #         # self.fields['tag_to'].disabled = True
     
-
-
-# class CommentForm(forms.ModelForm):
-
-#     class Meta:
-#         model = Comment
-#         fields = ('comment','comment_image')
-
-        
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         for key, field in self.fields.items():
-#             field.label = ""
-
-
-# # class AttachmentForm(forms.ModelForm):
-# #     class Meta:
-# #         model = Attachment
-# #         fields = ('file',)
 
 class CommentForm(forms.ModelForm):
     class Meta:

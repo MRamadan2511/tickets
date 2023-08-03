@@ -57,7 +57,7 @@ def dashboard(request):
 
 @login_required
 def ticket_create_view(request):
-    ticket_create_form = TicketCreateForm(request.POST or None, request.FILES or None)
+    ticket_create_form = TicketCreateForm(request.POST or None, request.FILES or None, user=request.user)
     
     if request.method == "POST":
         if ticket_create_form.is_valid():
@@ -96,10 +96,11 @@ def inbox_view(request):
                                             )
 
 
-class TicketListView(ListView):
+class TicketListView(LoginRequiredMixin, ListView):
     model = Ticket
     template_name = 'inbox.html'
     context_object_name = 'tickets'
+    login_url = '/accounts/login/'
 
     def get_queryset(self):
         user = self.request.user
@@ -316,6 +317,9 @@ class TicketUpdateTagToView(UpdateView):
             return obj
         else:
             raise Http404("You don't have permission to access this page.")
+
+
+
 
 
 

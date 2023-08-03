@@ -3,5 +3,5 @@
 <form method="post" action="{% url 'ticket_update_tag' ticket.pk %}">
     {% csrf_token %}
     {{ tag_form | crispy}}
-    <button type="submit" class="btn btn-success btn-sm">Update Tag</button>
+    <button type="submit" class="btn btn-primary btn-sm">Update Tag</button>
 </form>

@@ -2,17 +2,25 @@
 
 {% block content %}
 {% load crispy_forms_tags %}
-
+    {% if request.user.is_courier %}
+    <div class="mt-3 page-header text-center">
+        <h1> محادثه جديدة <i class="fa-solid fa-pen-to-square"></i></h1>
+    </div>
+    {% else %}
     <div class="mt-3 page-header text-center">
         <h1>  Create new Ticket <i class="fa-solid fa-pen-to-square"></i></h1>
     </div>
-
-    <form  method="POST" enctype="multipart/form-data">
+    {% endif %}
+    <form  method="POST" enctype="multipart/form-data" class="m-3 mb-5">
         {% csrf_token %}
         {{ ticket_create_form  | crispy }}
+        {% if request.user.is_courier %}
+        <input class="btn btn-primary " type="submit" value="اضافة المحادثه" />
+        {% else %}
         <input class="btn btn-primary" type="submit" value="Create new Ticket" />
+        {% endif %}
+
     </form>
-
-
+    
 {% endblock %}
 

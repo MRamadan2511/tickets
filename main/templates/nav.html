@@ -1,6 +1,6 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Max Ticket</a>
+      <a class="navbar-brand text-white" href="{% url 'inbox' %}">Max Ticket</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -8,22 +8,30 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="{% url 'inbox' %}">My Tickets</a>
+            {% if request.user.is_courier %}
+            <a class="nav-link active text-white" aria-current="page" href="{% url 'inbox' %}">محادثاتك</a>
+            {% else %}
+            <a class="nav-link active text-white" aria-current="page" href="{% url 'inbox' %}">My Tickets</a>
+            {% endif %}
+            
           </li>
           <li class="nav-item">
-            <a class="nav-link active btn " href="{% url 'ticket_create' %}">Create New Ticket</a>
+            {% if request.user.is_courier %}
+            <a class="nav-link active btn text-white " href="{% url 'ticket_create' %}">اضافة محادثة جديدة</a>
+            {% else %}
+            <a class="nav-link active btn text-white" href="{% url 'ticket_create' %}">Create New Ticket</a>
+            {% endif %}
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               {{request.user.user}}
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               
               <li><a class="dropdown-item" href="#">Profile</a></li>
-              <li><a class="dropdown-item" href="{% url 'inbox' %}">My Tickets</a></li>
+
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#">{{request.user.wh}}</a></li>
-              <li><a class="dropdown-item" href="#">{{request.user.wh}}</a></li>
+              <li><a class="dropdown-item" href="#">WH: {{request.user.wh}}</a></li>
               <li><a class="dropdown-item" href="{% url 'logout' %}">Log Out</a></li>
             </ul>
             {% else %}
@@ -38,7 +46,7 @@
         </ul>
         <form class="d-flex">
           <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
+          <button class="btn btn-outline-light" type="submit">Search</button>
         </form>
       </div>
     </div>

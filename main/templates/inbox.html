@@ -36,8 +36,8 @@
   }
   
   .card-title {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
   }
 
   .card-text {
@@ -66,17 +66,47 @@
   }
 </style>
 
-<div class="card-deck mt-3">
+{% if request.user.is_courier %}
+
+<div class="page-header"><h1 class="mb-5 text-center" >All Tickets <i class="fa-sharp fa-solid fa-square-envelope"></i></h1></div>
+
+
+<table class="table table-striped">
+  <thead>
+    <tr class ="text-center">
+      <th>Order ID</th>
+      <th>Updated</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ticket in tickets %}
+
+    <tr class ="text-center">
+      
+        <td><a class=" text-decoration-none" href="{% url 'ticket_detail' ticket.id %}">{{ ticket.order_id }} </a></td>
+        <td>{{ ticket.updated }}</td>
+      </a>
+      </tr>
+        {% empty %}
+        <p> There is no tickets in this view </p>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+
+
+<div class="card-deck mt-3" >
   <!-- All Tickets-->
   <div class="card text-white bg-primary" style="max-width: 14rem;">
     <div class="card-body">
-      <h5 class="card-title"><i class="fa-solid fa-envelopes-bulk fa-lg" style="color: #f2f2f2;"></i> Total Tickets</h5>
+      <h5 class="card-title" ><i class="fa-solid fa-envelopes-bulk fa-lg" style="color: #f2f2f2;"></i > Total Tickets</h5>
       <p class="card-text text-center"> {{ ticket_count }} </p>
     </div>
   </div>
   <!-- Closed Tickets-->
   <div class="card text-white bg-success" style="max-width: 14rem;">
-    <div class="card-body ">
+    <div class="card-body">
       <h5 class="card-title"><i class="fa-sharp fa-solid fa-envelope-circle-check fa-lg" style="color: #ffffff;"></i> Closed Tickets</h5>
       <p class="card-text text-center"> {{ closed_count }} </p>
     </div>
@@ -91,14 +121,14 @@
   <!-- Waiting Tickets-->
   <div class="card text-white bg-info" style="max-width: 14rem;">
     <div class="card-body">
-      <h5 class="card-title"><i class="fa-solid fa-circle-pause fa-beat-fade fa-lg" style="color: #ffffff;"></i> Waiting Tickets</h5>
+      <h5 class="card-title"><i class="fa-solid fa-circle-pause fa-beat-fade fa-lg" style="color: #ffffff;"></i>  Waiting Tickets</h5>
       <p class="card-text text-center"> {{ waiting_count }} </p>
     </div>
   </div>
   <!-- Open Tickets-->
   <div class="card text-white bg-dark" style="max-width: 14rem;">
     <div class="card-body">
-      <h5 class="card-title"><i class="fa-solid fa-envelope-open-text fa-shake fa-lg" style="color: #e1e9ea;"></i> Open Tickets</h5>
+      <h5 class="card-title"><i class="fa-solid fa-envelope-open-text fa-shake fa-lg" style="color: #e1e9ea;"></i> Opened Tickets</h5>
       <p class="card-text text-center"> {{ open_count }} </p>
     </div>
   </div>
@@ -163,7 +193,7 @@
     {% endfor %}
   </tbody>
 </table>
-
+{% endif %}
 
 
 

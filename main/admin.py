@@ -2,7 +2,7 @@ from django.contrib import admin
 from hijack.contrib.admin import HijackUserAdminMixin
 
 
-from .models import Ticket, Comment, UserProfile, NewUser,TicketLog
+from .models import Ticket, Comment, UserProfile, NewUser,TicketLog, TagTeam, Warehouse, Company
 
 from django.contrib.auth.admin import UserAdmin
 # Register your models here.
@@ -14,9 +14,9 @@ class UserAdminConfig(UserAdmin):
     list_filter = ('user',)
     ordering = ('user',)
     list_display = ('user',
-                    'is_active', 'is_staff',)
+                    'is_active', 'is_staff','company','warehouse',)
     fieldsets = (
-        (None, {'fields': ( 'user','wh',)}),
+        (None, {'fields': ( 'user','company','warehouse',)}),
         ('Permissions', {'fields': ( 'is_superuser','is_staff', 'is_active', 
         'is_courier', 'is_wh_manager','is_team_leader','is_manager', 'is_fleet',)}),
         
@@ -27,7 +27,7 @@ class UserAdminConfig(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('user','password1', 'password2', 'is_active', 'wh',)}
+            'fields': ('user','password1', 'password2', 'is_active', 'company','warehouse',)}
          ),
     )
 
@@ -51,3 +51,6 @@ class TicketAdmin(admin.ModelAdmin):
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Comment)
 admin.site.register(UserProfile)
+admin.site.register(Warehouse)
+admin.site.register(TagTeam)
+admin.site.register(Company)

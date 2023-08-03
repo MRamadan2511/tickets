@@ -5,6 +5,6 @@
 <form method="post" action="{% url 'ticket_update_warehouse' ticket.pk %}">
     {% csrf_token %}
     {{ warehouse_form | crispy}}
-    <button type="submit" class="btn btn-success btn-sm" >Update Warehouse</button>
+    <button type="submit" class="btn btn-primary btn-sm" >Update Warehouse</button>
 </form>
 
